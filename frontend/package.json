@@ -1,0 +1,9 @@
+{
+  "name": "campus-customs-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {"dev": "vite", "build": "tsc --noEmit && vite build"},
+  "dependencies": {"@vitejs/plugin-react": "latest", "typescript": "latest", "vite": "latest", "react": "latest", "react-dom": "latest", "lucide-react": "latest"},
+  "devDependencies": {"@types/react": "latest", "@types/react-dom": "latest"}
+}

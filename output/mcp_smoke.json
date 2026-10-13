@@ -1,0 +1,57 @@
+{
+  "server": "campus-customs",
+  "config": ".mcp.json",
+  "database": "data/campus_customs_new.db",
+  "connected": true,
+  "tests": [
+    {
+      "prompt": "Check the inventory and pricing for the white Bulldog tee in size S needed by ticket 101.",
+      "tool": "check_inventory",
+      "arguments": {"sku": "CC-TEE-WHITE", "size": "S"},
+      "output": {
+        "inventory": {
+          "sku": "CC-TEE-WHITE",
+          "name": "Classic Bulldog Tee",
+          "size": "S",
+          "qty": 0,
+          "location": "Aisle B"
+        },
+        "pricing": {
+          "sku": "CC-TEE-WHITE",
+          "unit_cost": 8.0,
+          "list_price": 28.0
+        }
+      }
+    },
+    {
+      "prompt": "Check invoice 501 and its vendor details to determine what is blocking the reprint for ticket 101.",
+      "tool": "get_invoice_status",
+      "arguments": {"invoice_id": 501},
+      "output": {
+        "id": 501,
+        "vendor_id": 1,
+        "amount": 840.0,
+        "due_date": "2026-08-28",
+        "status": "open",
+        "description": "Rush reprint CC-TEE-WHITE S",
+        "vendor_name": "Bulldog Print Co",
+        "specialty": "apparel reprint",
+        "lead_days": 5
+      }
+    },
+    {
+      "prompt": "Check lease 1 and today's shop date to assess the rent notice for ticket 102.",
+      "tool": "get_lease_details",
+      "arguments": {"lease_id": 1},
+      "output": {
+        "id": 1,
+        "space_name": "Chapel Street shop",
+        "landlord": "Elm City Properties",
+        "monthly_rent": 2400.0,
+        "next_due": "2026-09-02",
+        "notes": null,
+        "date_today": "2026-08-31"
+      }
+    }
+  ]
+}

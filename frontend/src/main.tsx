@@ -1,0 +1,36 @@
+import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { Activity, ArrowUpRight, CheckCircle2, CircleDollarSign, LoaderCircle, Play, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react'
+import './styles.css'
+import './approval.css'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+type Ticket = { id:number; type:string; requester:string; subject:string; sku?:string|null; size?:string|null; qty?:number|null; status:string; notes?:string|null }
+type Event = { run_id:string; step:number; agent:string; action:string; ticket_id?:number|null; tool?:string|null; result_summary:string }
+type Cash = { name:string; balance:number; date:string }
+const names:Record<string,string> = { boss:'Boss', inventory:'Inventory', accounting:'Accounting', facilities:'Facilities', customer_service:'Customer Service' }
+const colors:Record<string,string> = { boss:'navy', inventory:'cyan', accounting:'violet', facilities:'amber', customer_service:'rose' }
+
+async function api(path:string, options?:RequestInit) { const r=await fetch(API+path,{headers:{'Content-Type':'application/json'},...options}); if(!r.ok) throw new Error(await r.text()); return r.json() }
+function App() {
+  const [tickets,setTickets]=useState<Ticket[]>([]), [selected,setSelected]=useState(101), [events,setEvents]=useState<Event[]>([]), [cash,setCash]=useState<Cash|null>(null), [running,setRunning]=useState(false), [message,setMessage]=useState('Ready for a human decision.'), [error,setError]=useState(''), [kind,setKind]=useState('payment'), [refId,setRefId]=useState('501'), [amount,setAmount]=useState(''), [approvedBy,setApprovedBy]=useState('')
+  const refreshing=useRef(false)
+  const ticket=tickets.find(t=>t.id===selected)
+  const ticketEvents=useMemo(()=>events.filter(e=>e.ticket_id===selected || (!e.ticket_id && running)),[events,selected,running])
+  const load=async()=>{ if(refreshing.current) return; refreshing.current=true; try { const [nextTickets,nextCash,nextEvents]=await Promise.all([api('/tickets'),api('/cash'),api('/events?limit=200')]); if(Array.isArray(nextTickets)) setTickets(nextTickets); if(nextCash) setCash(nextCash); if(Array.isArray(nextEvents)) setEvents(nextEvents); setError('') } catch(e) { setError('Backend is still working; showing the last successful refresh.') } finally { refreshing.current=false } }
+  useEffect(()=>{load(); const timer=setInterval(load,2000); return()=>clearInterval(timer)},[])
+  const run=async()=>{ setRunning(true); setMessage('Agents are working…'); setError(''); try { await api(`/tickets/${selected}/run`,{method:'POST'}); setMessage('Run complete. Ticket marked resolved.'); await load() } catch(e){setError(String(e));setMessage('Run stopped.')} finally {setRunning(false)} }
+  const reset=async()=>{ await api('/reset',{method:'POST'}); setMessage('Working database reset.'); await load() }
+  const approve=async()=>{ try { await api('/approvals',{method:'POST',body:JSON.stringify({kind,ref_id:Number(refId),amount:Number(amount),approved_by:approvedBy})}); setMessage('Approved and applied. Checking balance updated.'); setAmount(''); await load() } catch(e){setError(String(e))} }
+  return <div className="app"><header className="topbar"><div className="brand"><div className="brand-mark"><Sparkles size={18}/></div><div><strong>Campus Customs</strong><span>agent operations desk</span></div></div><div className="top-actions"><span className="live"><i/> Live board</span><button className="quiet" onClick={reset}><RefreshCw size={15}/> Reset</button></div></header>
+    <main><section className="intro"><div><p className="eyebrow">TODAY'S CONTROL ROOM</p><h1>Make the next <em>right</em> call.</h1><p className="sub">Watch the team reason through shop tickets. Nothing leaves the desk without a human.</p></div><div className="cash-card"><div className="cash-label"><CircleDollarSign size={18}/> Checking balance</div><strong>${cash?.balance?.toLocaleString(undefined,{minimumFractionDigits:2}) ?? '—'}</strong><small>{cash?.date ? `as of ${cash.date}` : 'loading'}</small></div></section>
+      {error&&<div className="error">Could not reach backend: {error}</div>}
+      <section className="workspace"><aside className="ticket-list"><div className="section-title"><span>Open tickets</span><span className="count">{tickets.filter(t=>t.status==='open').length} active</span></div>{tickets.map(t=><button className={`ticket-card ${selected===t.id?'selected':''}`} onClick={()=>setSelected(t.id)} key={t.id}><div className="ticket-top"><span className="ticket-id">#{t.id}</span><span className={`status ${t.status}`}>{t.status==='open'?'OPEN':'RESOLVED'}</span></div><strong>{t.subject}</strong><small>{t.requester} · {t.type.replace('_',' ')}</small><ArrowUpRight size={17}/></button>)}</aside>
+      <section className="console"><div className="console-head"><div><p className="eyebrow">SELECTED TICKET</p><h2>#{ticket?.id} {ticket?.subject}</h2><p>{ticket?.notes}</p></div><button className="run" disabled={!ticket||running||ticket.status!=='open'} onClick={run}>{running?<><LoaderCircle className="spin" size={17}/> Team is working</>:<><Play size={16} fill="currentColor"/> Start agent team</>}</button></div>
+        <div className="run-status"><div className={running?'pulse':''}><Activity size={17}/><span>{message}</span></div><span className="secure"><ShieldCheck size={16}/> Human approval required</span></div>
+        <div className="feed-head"><h3>Agent activity</h3><span>{ticketEvents.length} events</span></div><div className="feed">{ticketEvents.length===0?<div className="empty"><CircleDollarSign size={28}/><strong>No activity yet</strong><span>Start the team to see decisions and MCP lookups here.</span></div>:ticketEvents.map((e,i)=><article className="event" key={`${e.run_id}-${e.step}-${i}`}><div className={`avatar ${colors[e.agent]||'navy'}`}>{(names[e.agent]||e.agent).slice(0,1)}</div><div className="event-body"><div className="event-line"><strong>{names[e.agent]||e.agent}</strong><span>{e.action}</span><time>step {e.step}</time></div><p>{e.result_summary}</p>{e.tool&&<code>⌁ {e.tool}</code>}</div></article>)}</div>
+        <div className="summary"><div><h3>Human decision queue</h3><p>Agents prepare; a human applies the final payment or purchase here.</p><div className="approval-form"><select value={kind} onChange={e=>setKind(e.target.value)}><option value="payment">Payment</option><option value="purchase">Purchase</option></select><input aria-label="Invoice ID" value={refId} onChange={e=>setRefId(e.target.value)} placeholder="Invoice ID"/><input aria-label="Amount" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Amount" type="number" min="0" step="0.01"/><input aria-label="Approved by" value={approvedBy} onChange={e=>setApprovedBy(e.target.value)} placeholder="Approved by"/><button className="approve" disabled={!amount||!approvedBy} onClick={approve}><CheckCircle2 size={15}/> Apply approval</button></div></div><span className="approval-pill"><ShieldCheck size={15}/> Protected</span></div>
+      </section></section>
+    </main><footer><span>Campus Customs Operations</span><span>Facts served by MCP · decisions owned by humans</span></footer></div>
+}
+createRoot(document.getElementById('root')!).render(<StrictMode><App/></StrictMode>)

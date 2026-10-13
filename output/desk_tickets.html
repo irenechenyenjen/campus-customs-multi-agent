@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campus Customs | Ticket Desk</title>
+  <style>
+    :root { color-scheme: dark; --pink:#ff4fa3; --deep:#09090d; --panel:#15151e; --muted:#aaa8b8; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--deep); color:#f8f6fb; font:16px/1.55 system-ui, sans-serif; }
+    header { padding:34px 7vw 24px; border-bottom:1px solid #292735; background:linear-gradient(135deg,#17101b,#09090d); }
+    h1 { margin:0 0 5px; font-size:clamp(1.8rem,4vw,3rem); } .accent { color:var(--pink); } header p { margin:0; color:var(--muted); }
+    main { width:min(1050px,86vw); margin:28px auto 60px; } .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    button { border:1px solid #393544; border-radius:999px; padding:10px 17px; color:#ddd9e6; background:#171620; cursor:pointer; font:inherit; }
+    button:hover, button.active { color:#fff; border-color:var(--pink); background:#3a1830; box-shadow:0 0 0 2px #ff4fa333; }
+    .panel { display:none; background:var(--panel); border:1px solid #302d3c; border-radius:16px; padding:26px; } .panel.active { display:block; }
+    h2 { margin-top:0; } h3 { color:var(--pink); margin-bottom:7px; } h4 { margin-bottom:5px; color:#e7c0d6; }
+    li { margin:8px 0; } .expected { border-left:3px solid var(--pink); padding-left:20px; } .actual { margin-top:25px; min-height:90px; border:1px dashed #514b5c; border-radius:10px; padding:14px 18px; color:var(--muted); }
+    .note { color:var(--muted); font-style:italic; } code { color:#ffc1df; }
+  </style>
+</head>
+<body>
+  <header><h1>Campus Customs <span class="accent">Ticket Desk</span></h1><p>Problem 6 — expected agent plans before the backend run</p></header>
+  <main>
+    <nav class="tabs" aria-label="Ticket tabs">
+      <button class="active" data-tab="ticket-101">Ticket 101</button><button data-tab="ticket-102">Ticket 102</button><button data-tab="ticket-103">Ticket 103</button><button data-tab="cash">Cash</button><button data-tab="reflection">Reflection</button>
+    </nav>
+
+    <section id="ticket-101" class="panel active"><h2>Ticket 101 · Bulldog tee customer order</h2><div class="expected">
+      <h3>Expected</h3><h4>First call</h4><p>Boss should call <strong>Inventory first</strong>, because the requested white tee in size S is the immediate fulfillment problem and stock must be confirmed before promising anything.</p>
+      <h4>Expected delegations</h4><ol><li>Boss → Inventory: confirm the SKU/size shortage and identify a viable restock vendor and lead time.</li><li>Boss → Accounting: inspect invoice 501, cash, and the unpaid-invoice shipment blocker; prepare any payment recommendation for human approval.</li><li>Boss → Customer Service: draft a customer update based only on the confirmed inventory and timing evidence.</li></ol>
+      <h4>Expected MCP tools</h4><p><code>list_open_tickets</code>, <code>check_inventory</code>, <code>find_restock_vendors</code>, <code>get_invoice_status</code>, and <code>get_cash_account</code>.</p>
+    </div><div class="actual"><strong>Actual</strong><br>Boss → Inventory → Accounting. MCP evidence: <code>check_inventory</code>, <code>find_restock_vendors</code>, <code>get_invoice_status</code>, <code>get_cash_account</code>. Result: 0 tee units; invoice 501 is open and overdue for $840. No purchase, payment, or customer message was made.</div></section>
+
+    <section id="ticket-102" class="panel"><h2>Ticket 102 · Chapel Street shop rent</h2><div class="expected">
+      <h3>Expected</h3><h4>First call</h4><p>Boss should call <strong>Facilities first</strong>, because Facilities owns the lease relationship and can confirm the rent amount and due date before Accounting prepares anything.</p>
+      <h4>Expected delegations</h4><ol><li>Boss → Facilities: inspect lease 1 against the shop's current date and report whether rent is due or overdue.</li><li>Boss → Accounting: after Facilities confirms the obligation, check cash and prepare a payment recommendation for human approval.</li></ol>
+      <h4>Expected MCP tools</h4><p><code>list_open_tickets</code>, <code>get_lease_details</code>, and <code>get_cash_account</code>.</p>
+    </div><div class="actual"><strong>Actual</strong><br>Boss → Facilities → Accounting. MCP evidence: <code>get_lease_details</code>, <code>get_cash_account</code>. Result: lease 1 confirms $2,400 rent due 2026-09-02 to Elm City Properties. No payment or message was made.</div></section>
+
+    <section id="ticket-103" class="panel"><h2>Ticket 103 · Bulk hoodie discount</h2><div class="expected">
+      <h3>Expected</h3><h4>First call</h4><p>Boss should call <strong>Inventory first</strong>, because the request is for 20 hoodies but the current size-M stock must be measured before a discount or customer promise is considered.</p>
+      <h4>Expected delegations</h4><ol><li>Boss → Inventory: check size-M stock, calculate the shortfall, and identify restock options and lead times.</li><li>Boss → Accounting: use pricing and cash evidence to assess the discount margin and prepare any purchase-order recommendation for human approval.</li><li>Boss → Customer Service: draft a response that states only what the evidence supports and remains unsent.</li></ol>
+      <h4>Expected MCP tools</h4><p><code>list_open_tickets</code>, <code>check_inventory</code>, <code>find_restock_vendors</code>, and <code>get_cash_account</code>.</p>
+    </div><div class="actual"><strong>Actual</strong><br>Boss → Inventory → Accounting, with Customer Service draft. MCP evidence: <code>check_inventory</code>, <code>find_restock_vendors</code>, <code>get_cash_account</code>. Result: 8 available, 12-unit shortfall, $22 cost and $58 list price; no discount, purchase, or sent message was made.</div></section>
+
+    <section id="cash" class="panel"><h2>Cash ledger</h2><div class="expected"><h3>Problem 9 actual cash movement</h3><p><strong>Starting checking balance after reset:</strong> $3,400.00</p><ul><li><strong>Ticket 101:</strong> $0.00 out. The $840 invoice was open and unpaid, but no human payment approval was given.</li><li><strong>Ticket 102:</strong> $0.00 out. The $2,400 rent obligation was identified, but no human payment approval was given.</li><li><strong>Ticket 103:</strong> $0.00 out. No purchase order or discount payment was approved.</li></ul><p><strong>Ending checking balance:</strong> $3,400.00 — verified against <code>cash_accounts.balance</code>.</p></div></section>
+    <section id="reflection" class="panel"><h2>Reflection</h2><p class="note">This reflection uses the Expected and Actual sections above, the final audit trail, and the Cash tab as evidence.</p>
+      <div class="reflection-block"><h3>1. Agent performance</h3><p><strong>Ticket 101:</strong> Inventory correctly found 0 CC-TEE-WHITE size-S units with <code>check_inventory</code>. Accounting verified open overdue invoice 501 for $840 and the $3,400 checking balance with <code>get_invoice_status</code> and <code>get_cash_account</code>. The team safely avoided promising stock, placing an order, paying, or contacting the customer. Customer Service did not produce a useful final draft, so the customer follow-up was weaker than the operational analysis.</p><p><strong>Ticket 102:</strong> Facilities verified lease 1: Chapel Street shop, Elm City Properties, $2,400 monthly rent due 2026-09-02. Accounting checked cash. The team correctly required human approval and made no payment. This was safe and appropriately narrow, although the team could have stated more clearly that the rent was due in two days rather than overdue on 2026-08-31.</p><p><strong>Ticket 103:</strong> Inventory found 8 size-M hoodies against a request for 20, a 12-unit shortfall, and identified the five-day apparel-reprint vendor lead time. Pricing evidence showed $22 cost and $58 list price; Accounting checked cash; Customer Service prepared an unsent draft. The team correctly refused to invent a discount policy or approve an unsupported price override.</p></div>
+      <div class="reflection-block"><h3>2. Expected versus Actual</h3><p><strong>101:</strong> The expected Boss → Inventory → Accounting → optional Customer Service sequence largely happened. The actual tools were <code>check_inventory</code>, <code>find_restock_vendors</code>, <code>get_invoice_status</code>, and <code>get_cash_account</code>. The difference was the missing useful customer draft.</p><p><strong>102:</strong> The expected Boss → Facilities → Accounting sequence matched the actual run. <code>get_lease_details</code> and <code>get_cash_account</code> provided the needed evidence; Inventory and Customer Service were not needed.</p><p><strong>103:</strong> The expected Boss → Inventory → Accounting, with Customer Service only drafting, also matched. The actual run used <code>check_inventory</code>, <code>find_restock_vendors</code>, and <code>get_cash_account</code>, and preserved the draft-only rule. The team had enough stock and cost evidence to identify the shortfall, but not a discount policy or proposed override price to approve the offer.</p><p>The Cash tab is important evidence: every ticket caused $0.00 cash movement because there were no human approvals, so the balance stayed $3,400.</p></div>
+      <div class="reflection-block"><h3>3. What would be simpler as one agent with tools?</h3><p>A single operations agent could have handled these three tickets with less handoff overhead. It could call Inventory tools for 101 and 103, the lease tool for 102, and Accounting tools only when a money question appeared. Ticket 102 especially did not need a multi-agent discussion. The multi-agent design is still valuable for independent checks and accountability: Inventory supplies stock facts, Accounting guards cash and margins, Facilities owns leases, and Customer Service keeps messages separate and unsent.</p></div>
+      <div class="reflection-block"><h3>4. Three problems this team could solve now</h3><ol><li>A new apparel shortage: Inventory could use <code>check_inventory</code> and <code>find_restock_vendors</code>, while Accounting checks the open-invoice blocker and cash.</li><li>A future rent review: Facilities could compare another lease due date with <code>desk.data_today</code>, and Accounting could prepare an approval-only payment recommendation.</li><li>Another bulk student-organization order: Inventory could measure stock and lead time, Accounting could check cost/list-price evidence, and Customer Service could draft an availability response without sending it.</li></ol></div>
+      <div class="reflection-block"><h3>5. Three problems this team cannot solve yet</h3><ol><li><strong>Real shipment receiving:</strong> The tools know vendor lead time but cannot create or track purchase orders, read carrier status, receive units, or update inventory quantities. We would need purchase-order, shipment, receiving, and inventory-update tools.</li><li><strong>Returns and refunds:</strong> The database has no sales, customer orders, refund, or payment-processor tables. We would need secure order/refund tools, customer identity checks, and Accounting and Customer Service workflows.</li><li><strong>Discount authorization:</strong> Ticket 103 proves the gap: $22 cost and $58 list price exist, but no discount policy, threshold, or proposed override exists. We would need a policy table, margin calculator, approval-threshold tool, and a recorded human approval before Customer Service can make an offer.</li></ol></div>
+      <div class="reflection-block"><h3>Overall assessment</h3><p>The team performed best when it stayed grounded in MCP evidence and treated uncertainty as a reason to pause. “Resolved” on this board does not mean that money moved or that a customer or vendor was contacted. The unchanged $3,400 balance is therefore a safety success, not a missing action.</p></div>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b === button));
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab));
+    }));
+  </script>
+</body>
+</html>
