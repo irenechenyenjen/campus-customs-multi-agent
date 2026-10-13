@@ -1,1 +1,1 @@
-PENDING_GITHUB_REPOSITORY_URL
+https://github.com/irenechenyenjen/campus-customs-multi-agent
